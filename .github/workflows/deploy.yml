@@ -37,7 +37,7 @@ jobs:
 
       - name: Deploy backend to Railway
         working-directory: backend
-        run: railway up --service axon-api --detach
+        run: railway up --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
