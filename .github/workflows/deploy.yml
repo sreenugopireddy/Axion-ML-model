@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,14 +19,12 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: |
-          cd backend
-          pip install -r requirements.txt
+        working-directory: backend
+        run: pip install -r requirements.txt
 
       - name: Run tests
-        run: |
-          cd backend
-          python -m pytest tests/ -v --cov=app/pipeline --cov-report=term-missing
+        working-directory: backend
+        run: python -m pytest tests/ -v --cov=app/pipeline --cov-report=term-missing
 
   deploy-backend:
     needs: test
@@ -35,9 +36,8 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deploy backend to Railway
-        run: |
-          cd backend
-          railway up --service axon-api --detach
+        working-directory: backend
+        run: railway up --service axon-api --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
@@ -47,23 +47,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install and build frontend
+      - name: Install and build
+        working-directory: frontend
         run: |
-          cd frontend
           npm install
           npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: Deploy frontend to Vercel
-        run: |
-          cd frontend
-          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+      - name: Deploy to Vercel
+        working-directory: frontend
+        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
